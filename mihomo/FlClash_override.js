@@ -1,4 +1,13 @@
-// FlClash 覆写脚本 - qi 全功能版 v3.4 (省额度版, 基于 v3.3 改)
+// FlClash 覆写脚本 - qi 全功能版 v3.5 (省额度版, 基于 v3.4 改)
+// v3.5: 落实两条硬规矩。①顺位兜底链: 带地区默认的精细分流组(AI/YouTube/Google/
+//       Telegram/流媒体/游戏/社交/支付/加密货币)第一位改走「·顺位」故障转移链——
+//       默认地区没节点时自动顺位落到下一个地区, 链尾压「♻️ 自动选择」, 组永不为空;
+//       链只是默认、不是锁: 每个组里仍列全所有地区与分组, 随时可手动改选任何地区/节点。
+//       ②家宽只许手动: 名字带家宽/住宅的节点从全部自动组剔除(自动选择/故障转移/
+//       负载均衡/各地区自动组/低倍率与优选IP的自动组), 地区手动组里也不再直接列
+//       家宽节点; 家宽只在「🏠 家宽节点」组和「👋 手动选择」里手动选。全部节点
+//       都是家宽时, 自动组成员回落 DIRECT 占位, 保证配置不因空组被内核拒绝加载。
+//       其余(各组默认地区/测速节奏/规则/DNS/dialer-proxy 处理)与 v3.4 完全一致。
 // v3.4: 每个精细分流组的第一位(默认选择)按全网主流推荐地区预置好, 用户需要时自己改:
 //       AI=美国(机主指定) / YouTube=香港 / Google=香港 / FCM=故障转移(固定不跳)
 //       Telegram=新加坡 / 流媒体=新加坡 / 游戏=日本 / 社交媒体=新加坡
@@ -14,7 +23,7 @@
 //           否则家宽等链式节点找不到前置, 内核校验失败导致整个配置无法启动。
 // 参考全网主流方案(MyClash / HiClash / ACL4SSR / MetaCubeX)整合:
 // 地区分组(通用识别, 换任何订阅可用) + 每地区自动选择 + 故障转移 + 负载均衡
-// + 倍率分组(低倍率/高倍率) + 家宽单独成组(保留, 不排除) + 精细分流组
+// + 倍率分组(低倍率/高倍率) + 家宽单独成组(只许手动, 自动组全剔除) + 精细分流组
 // + 四层去广告(ACL4SSR BanAD/BanProgramAD/BanEasyList + 内置广告分类, 带 UnBan 防误杀)
 // + fake-ip 兼容名单(游戏联机/语音通话/时间同步不被假IP弄坏)
 // + 冷启动优化(记住选择和 fake-ip 映射) + DNS 分流防污染
@@ -31,6 +40,17 @@ function main(config) {
   var excludeRe = /(剩余流量|流量剩余|距离下次重置|到期|过期|官网|请更新订阅|更新订阅)/i;
   var usable = allNames.filter(function (n) { return !excludeRe.test(n); });
   var pool = usable.length > 0 ? usable : allNames;
+
+  // ---------- v3.5 规矩二: 家宽/住宅只许手动 ----------
+  // autoPool 是剔除家宽后的池子: 一切自动组(自动选择/故障转移/负载均衡/
+  // 各地区自动组/倍率与优选IP的自动组)只准用它; 家宽节点只进
+  // 「🏠 家宽节点」和「👋 手动选择」两个纯手动组。
+  var homeRe = /(家宽|住宅|家庭宽带|residential)/i;
+  function isHome(n) { return homeRe.test(n); }
+  var autoPool = pool.filter(function (n) { return !isHome(n); });
+  // 全部节点都是家宽时 autoPool 为空: 自动组成员回落 DIRECT 占位保命,
+  // 否则空组会让内核直接拒绝加载整个配置(DIRECT 只是占位, 不会拿家宽测速)。
+  var autoMembers = autoPool.length > 0 ? autoPool : ["DIRECT"];
 
   var TEST_URL = "https://cp.cloudflare.com/generate_204";
   function autoGroup(name, members, tolerance) {
@@ -70,7 +90,7 @@ function main(config) {
   var regionSelectors = [];
   var regionGroups = [];
   regions.forEach(function (r) {
-    var members = pool.filter(function (n) {
+    var members = autoPool.filter(function (n) {
       if (assigned[n]) return false;
       if (r.re.test(n)) { assigned[n] = true; return true; }
       return false;
@@ -81,18 +101,21 @@ function main(config) {
     regionGroups.push({ name: r.label, type: "select", proxies: [autoName].concat(members) });
     regionSelectors.push(r.label);
   });
-  var rest = pool.filter(function (n) { return !assigned[n]; });
+  var rest = autoPool.filter(function (n) { return !assigned[n]; });
   if (rest.length > 0) {
     regionGroups.push(autoGroup("🌍 其他自动", rest, 50));
     regionGroups.push({ name: "🌍 其他", type: "select", proxies: ["🌍 其他自动"].concat(rest) });
     regionSelectors.push("🌍 其他");
   }
 
-  // ---------- 属性分组: 家宽 / 倍率(节点照常留在地区组和手动组, 这里是额外入口) ----------
+  // ---------- 属性分组: 家宽 / 倍率 ----------
+  // 家宽只在这里成组(纯手动 select), 外加「👋 手动选择」里也能手动选到;
+  // 地区组和一切自动组里都没有家宽(v3.5 规矩二)。倍率/优选IP 的手动组照旧
+  // 列全节点(手动选不受限), 只有它们的自动子组用剔了家宽的成员。
   var extraSelectors = [];
   var extraGroups = [];
 
-  var homeNodes = pool.filter(function (n) { return /(家宽|住宅|residential|家庭宽带)/i.test(n); });
+  var homeNodes = pool.filter(isHome);
   if (homeNodes.length > 0) {
     extraGroups.push({ name: "🏠 家宽节点", type: "select", proxies: homeNodes.slice() });
     extraSelectors.push("🏠 家宽节点");
@@ -105,8 +128,14 @@ function main(config) {
   var lowRate = pool.filter(function (n) { var r = rateOf(n); return r !== null && r < 1; });
   var highRate = pool.filter(function (n) { var r = rateOf(n); return r !== null && r >= 2; });
   if (lowRate.length > 0) {
-    extraGroups.push(autoGroup("💰 低倍率自动", lowRate, 50));
-    extraGroups.push({ name: "💰 低倍率", type: "select", proxies: ["💰 低倍率自动"].concat(lowRate) });
+    var lowAuto = lowRate.filter(function (n) { return !isHome(n); });
+    if (lowAuto.length > 0) {
+      extraGroups.push(autoGroup("💰 低倍率自动", lowAuto, 50));
+      extraGroups.push({ name: "💰 低倍率", type: "select", proxies: ["💰 低倍率自动"].concat(lowRate) });
+    } else {
+      // 低倍率节点全是家宽: 不建自动子组, 只留手动组
+      extraGroups.push({ name: "💰 低倍率", type: "select", proxies: lowRate.slice() });
+    }
     extraSelectors.push("💰 低倍率");
   }
   if (highRate.length > 0) {
@@ -118,8 +147,13 @@ function main(config) {
   // 单独拢成一组(自带自动测速), 方便在各分流组里一键选到这一整组。
   var prefNodes = pool.filter(function (n) { return /优选IP/i.test(n); });
   if (prefNodes.length > 0) {
-    extraGroups.push(autoGroup("⭐ 优选IP自动", prefNodes, 50));
-    extraGroups.push({ name: "⭐ 优选IP", type: "select", proxies: ["⭐ 优选IP自动"].concat(prefNodes) });
+    var prefAuto = prefNodes.filter(function (n) { return !isHome(n); });
+    if (prefAuto.length > 0) {
+      extraGroups.push(autoGroup("⭐ 优选IP自动", prefAuto, 50));
+      extraGroups.push({ name: "⭐ 优选IP", type: "select", proxies: ["⭐ 优选IP自动"].concat(prefNodes) });
+    } else {
+      extraGroups.push({ name: "⭐ 优选IP", type: "select", proxies: prefNodes.slice() });
+    }
     extraSelectors.push("⭐ 优选IP");
   }
 
@@ -134,23 +168,26 @@ function main(config) {
 
   var groups = [];
   groups.push({ name: MAIN, type: "select", proxies: mainOptions.slice() });
-  groups.push(autoGroup(AUTO, pool, 50));
+  groups.push(autoGroup(AUTO, autoMembers, 50));
   groups.push({
-    name: FALLBACK, type: "fallback", proxies: pool,
+    name: FALLBACK, type: "fallback", proxies: autoMembers.slice(),
     url: TEST_URL, interval: 600, lazy: true, timeout: 3000, "max-failed-times": 3
   });
   groups.push({
-    name: LB, type: "load-balance", strategy: "consistent-hashing", proxies: pool,
+    name: LB, type: "load-balance", strategy: "consistent-hashing", proxies: autoMembers.slice(),
     url: TEST_URL, interval: 600, lazy: true, timeout: 3000
   });
   groups.push({ name: MANUAL, type: "select", proxies: pool.slice() });
 
   // ---------- 精细分流组 ----------
-  // 每组第一位 = 默认选择(v3.4 按全网主流推荐预置; 订阅里没有的地区自动跳过),
-  // 其余选项照旧全保留, 用户随时可自己改选别的。
-  function svcOptions(preferred) {
+  // v3.5 规矩一: 带地区默认的组, 第一位改走「·顺位」兜底链(见下方 chainDefs),
+  // 默认地区是链首, 没节点自动顺位往下, 链尾压自动选择; 链只是默认不是锁——
+  // 组里照旧列全: 默认地区、总开关、自动组、全部地区、附加组、手动选择,
+  // 用户随时可改选任何一个。无地区默认的组(FCM/测速/哔哩/苹果/微软/远控等)与 v3.4 一致。
+  function svcOptions(preferred, chainName) {
     var list = [];
     function push(x) { if (x && list.indexOf(x) < 0) list.push(x); }
+    if (chainName) push(chainName);
     (preferred || []).forEach(function (p) {
       if (p === "DIRECT" || p === MAIN || p === AUTO || p === FALLBACK || p === MANUAL ||
           regionSelectors.indexOf(p) >= 0 || extraSelectors.indexOf(p) >= 0) push(p);
@@ -161,18 +198,43 @@ function main(config) {
     push(MANUAL);
     return list;
   }
+  // 顺位链地区顺序: 链首几位按各组用途的通行最优排(与全家其他包口径一致),
+  // 后面统一接 CHAIN_TAIL, 订阅里没有的地区在生成时自动跳过, 最后压自动选择。
+  var CHAIN_TAIL = ["🇲🇾 马来西亚", "🇹🇭 泰国", "🇻🇳 越南", "🇮🇩 印尼", "🇵🇭 菲律宾", "🇮🇳 印度", "🇦🇺 澳大利亚", "🇨🇦 加拿大", "🇬🇧 英国", "🇩🇪 德国", "🇫🇷 法国", "🇳🇱 荷兰", "🇷🇺 俄罗斯", "🇹🇷 土耳其", "🇧🇷 巴西"];
+  var chainDefs = {
+    "🤖 AI服务":   ["🇺🇸 美国", "🇸🇬 新加坡", "🇹🇼 台湾", "🇯🇵 日本", "🇭🇰 香港", "🇰🇷 韩国"],
+    "📺 YouTube":  ["🇭🇰 香港", "🇯🇵 日本", "🇸🇬 新加坡", "🇺🇸 美国", "🇹🇼 台湾", "🇰🇷 韩国"],
+    "🔍 Google服务": ["🇭🇰 香港", "🇸🇬 新加坡", "🇺🇸 美国", "🇹🇼 台湾", "🇯🇵 日本", "🇰🇷 韩国"],
+    "✈️ Telegram": ["🇸🇬 新加坡", "🇺🇸 美国", "🇹🇼 台湾", "🇯🇵 日本", "🇭🇰 香港", "🇰🇷 韩国"],
+    "🎬 流媒体":   ["🇸🇬 新加坡", "🇺🇸 美国", "🇹🇼 台湾", "🇯🇵 日本", "🇭🇰 香港", "🇰🇷 韩国"],
+    "🎮 游戏平台": ["🇯🇵 日本", "🇸🇬 新加坡", "🇺🇸 美国", "🇹🇼 台湾", "🇭🇰 香港", "🇰🇷 韩国"],
+    "📱 社交媒体": ["🇸🇬 新加坡", "🇺🇸 美国", "🇹🇼 台湾", "🇯🇵 日本", "🇭🇰 香港", "🇰🇷 韩国"],
+    "💰 支付平台": ["🇺🇸 美国", "🇸🇬 新加坡", "🇹🇼 台湾", "🇯🇵 日本", "🇭🇰 香港", "🇰🇷 韩国"],
+    "₿ 加密货币": ["🇸🇬 新加坡", "🇺🇸 美国", "🇹🇼 台湾", "🇯🇵 日本", "🇭🇰 香港", "🇰🇷 韩国"]
+  };
+  function chainGroup(svcName) {
+    var members = [];
+    chainDefs[svcName].concat(CHAIN_TAIL).forEach(function (r) {
+      if (regionSelectors.indexOf(r) >= 0 && members.indexOf(r) < 0) members.push(r);
+    });
+    members.push(AUTO);
+    return {
+      name: svcName + "·顺位", type: "fallback", proxies: members,
+      url: TEST_URL, interval: 600, lazy: true, timeout: 3000, "max-failed-times": 3
+    };
+  }
   var serviceGroups = [
-    { name: "🤖 AI服务", proxies: svcOptions(["🇺🇸 美国"]) },
-    { name: "📺 YouTube", proxies: svcOptions(["🇭🇰 香港", "🇯🇵 日本"]) },
-    { name: "🔍 Google服务", proxies: svcOptions(["🇭🇰 香港"]) },
+    { name: "🤖 AI服务", proxies: svcOptions(["🇺🇸 美国"], "🤖 AI服务·顺位") },
+    { name: "📺 YouTube", proxies: svcOptions(["🇭🇰 香港", "🇯🇵 日本"], "📺 YouTube·顺位") },
+    { name: "🔍 Google服务", proxies: svcOptions(["🇭🇰 香港"], "🔍 Google服务·顺位") },
     { name: "🔔 FCM推送", proxies: svcOptions([FALLBACK]) },
-    { name: "✈️ Telegram", proxies: svcOptions(["🇸🇬 新加坡"]) },
-    { name: "🎬 流媒体", proxies: svcOptions(["🇸🇬 新加坡", "🇺🇸 美国"]) },
-    { name: "🎮 游戏平台", proxies: svcOptions(["🇯🇵 日本"]) },
+    { name: "✈️ Telegram", proxies: svcOptions(["🇸🇬 新加坡"], "✈️ Telegram·顺位") },
+    { name: "🎬 流媒体", proxies: svcOptions(["🇸🇬 新加坡", "🇺🇸 美国"], "🎬 流媒体·顺位") },
+    { name: "🎮 游戏平台", proxies: svcOptions(["🇯🇵 日本"], "🎮 游戏平台·顺位") },
     { name: "🐙 GitHub", proxies: svcOptions([AUTO]) },
-    { name: "📱 社交媒体", proxies: svcOptions(["🇸🇬 新加坡"]) },
-    { name: "💰 支付平台", proxies: svcOptions(["🇺🇸 美国"]) },
-    { name: "₿ 加密货币", proxies: svcOptions(["🇸🇬 新加坡"]) },
+    { name: "📱 社交媒体", proxies: svcOptions(["🇸🇬 新加坡"], "📱 社交媒体·顺位") },
+    { name: "💰 支付平台", proxies: svcOptions(["🇺🇸 美国"], "💰 支付平台·顺位") },
+    { name: "₿ 加密货币", proxies: svcOptions(["🇸🇬 新加坡"], "₿ 加密货币·顺位") },
     { name: "⏩ 测速", proxies: svcOptions(["DIRECT"]) },
     { name: "📺 哔哩哔哩", proxies: svcOptions(["DIRECT"]) },
     { name: "🍎 苹果服务", proxies: svcOptions(["DIRECT"]) },
@@ -180,6 +242,7 @@ function main(config) {
     { name: "🖥️ 远控工具", proxies: svcOptions(["DIRECT"]) }
   ];
   serviceGroups.forEach(function (s) {
+    if (chainDefs[s.name]) groups.push(chainGroup(s.name));
     groups.push({ name: s.name, type: "select", proxies: s.proxies.slice() });
   });
   groups.push({ name: "🛑 广告拦截", type: "select", proxies: ["REJECT", "DIRECT"] });
