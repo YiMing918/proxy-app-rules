@@ -1,0 +1,199 @@
+[
+  {
+    "remarks": "去广告（geosite 内置广告分类）",
+    "outboundTag": "block",
+    "domain": [
+      "geosite:category-ads-all"
+    ]
+  },
+  {
+    "remarks": "局域网 IP 直连",
+    "outboundTag": "direct",
+    "ip": [
+      "geoip:private"
+    ]
+  },
+  {
+    "remarks": "局域网域名直连",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:private"
+    ]
+  },
+  {
+    "remarks": "AI 服务走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "domain:openai.com",
+      "domain:chatgpt.com",
+      "domain:oaistatic.com",
+      "domain:anthropic.com",
+      "domain:claude.ai",
+      "domain:perplexity.ai",
+      "domain:x.ai",
+      "domain:grok.com",
+      "domain:poe.com",
+      "domain:deepseek.com",
+      "geosite:openai",
+      "geosite:category-ai-!cn"
+    ]
+  },
+  {
+    "remarks": "YouTube 走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:youtube"
+    ]
+  },
+  {
+    "remarks": "FCM 推送走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "full:mtalk.google.com",
+      "domain:fcm.googleapis.com"
+    ]
+  },
+  {
+    "remarks": "Google 走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:google"
+    ]
+  },
+  {
+    "remarks": "Telegram 走代理（域名）",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:telegram"
+    ]
+  },
+  {
+    "remarks": "Telegram 走代理（IP）",
+    "outboundTag": "proxy",
+    "ip": [
+      "geoip:telegram"
+    ]
+  },
+  {
+    "remarks": "流媒体走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:netflix",
+      "geosite:disney",
+      "geosite:hbo",
+      "geosite:spotify",
+      "keyword:emby"
+    ]
+  },
+  {
+    "remarks": "GitHub 走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:github"
+    ]
+  },
+  {
+    "remarks": "Steam 下载直连",
+    "outboundTag": "direct",
+    "domain": [
+      "domain:steamcontent.com",
+      "domain:steamstatic.com"
+    ]
+  },
+  {
+    "remarks": "游戏平台走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:steam"
+    ]
+  },
+  {
+    "remarks": "社交媒体走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:twitter",
+      "geosite:facebook",
+      "geosite:instagram",
+      "geosite:tiktok"
+    ]
+  },
+  {
+    "remarks": "支付走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:paypal"
+    ]
+  },
+  {
+    "remarks": "加密货币走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:category-cryptocurrency"
+    ]
+  },
+  {
+    "remarks": "测速直连",
+    "outboundTag": "direct",
+    "domain": [
+      "domain:speedtest.net",
+      "domain:ookla.com",
+      "keyword:speedtest"
+    ]
+  },
+  {
+    "remarks": "哔哩哔哩直连",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:bilibili"
+    ]
+  },
+  {
+    "remarks": "苹果服务直连",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:apple"
+    ]
+  },
+  {
+    "remarks": "微软服务直连",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:microsoft"
+    ]
+  },
+  {
+    "remarks": "远程控制直连",
+    "outboundTag": "direct",
+    "domain": [
+      "domain:teamviewer.com",
+      "domain:anydesk.com",
+      "domain:todesk.com"
+    ]
+  },
+  {
+    "remarks": "国内域名直连",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:cn"
+    ]
+  },
+  {
+    "remarks": "国内 IP 直连",
+    "outboundTag": "direct",
+    "ip": [
+      "geoip:cn"
+    ]
+  },
+  {
+    "remarks": "国外域名走代理",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:geolocation-!cn"
+    ]
+  },
+  {
+    "remarks": "漏网之鱼（其余全部走代理）",
+    "outboundTag": "proxy",
+    "network": "tcp,udp"
+  }
+]
