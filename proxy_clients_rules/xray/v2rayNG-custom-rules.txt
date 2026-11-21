@@ -1,0 +1,56 @@
+# v2rayNG 旧版「设置 → 自定义规则」三栏清单（新版请用同文件夹的 JSON 导入）
+# 用法：把每一栏下面的行，原样粘到对应栏里（拦截 / 直连 / 代理），一行一条。
+
+===== 拦截（BLOCKED） =====
+geosite:category-ads-all
+
+===== 直连（DIRECT） =====
+geoip:private
+geosite:private
+domain:steamcontent.com
+domain:steamstatic.com
+domain:speedtest.net
+domain:ookla.com
+keyword:speedtest
+geosite:bilibili
+geosite:apple
+geosite:microsoft
+domain:teamviewer.com
+domain:anydesk.com
+domain:todesk.com
+geosite:cn
+geoip:cn
+
+===== 代理（PROXY） =====
+domain:openai.com
+domain:chatgpt.com
+domain:oaistatic.com
+domain:anthropic.com
+domain:claude.ai
+domain:perplexity.ai
+domain:x.ai
+domain:grok.com
+domain:poe.com
+domain:deepseek.com
+geosite:openai
+geosite:category-ai-!cn
+geosite:youtube
+full:mtalk.google.com
+domain:fcm.googleapis.com
+geosite:google
+geosite:telegram
+geoip:telegram
+geosite:netflix
+geosite:disney
+geosite:hbo
+geosite:spotify
+keyword:emby
+geosite:github
+geosite:steam
+geosite:twitter
+geosite:facebook
+geosite:instagram
+geosite:tiktok
+geosite:paypal
+geosite:category-cryptocurrency
+geosite:geolocation-!cn
