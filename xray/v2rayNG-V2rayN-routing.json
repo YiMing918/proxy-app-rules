@@ -194,6 +194,7 @@
   {
     "remarks": "漏网之鱼（其余全部走代理）",
     "outboundTag": "proxy",
-    "network": "tcp,udp"
+    "network": "tcp,udp",
+    "port": "0-65535"
   }
 ]
