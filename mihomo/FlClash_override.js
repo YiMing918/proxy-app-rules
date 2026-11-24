@@ -6,7 +6,8 @@
 //       ②家宽只许手动: 名字带家宽/住宅的节点从全部自动组剔除(自动选择/故障转移/
 //       负载均衡/各地区自动组/低倍率与优选IP的自动组), 地区手动组里也不再直接列
 //       家宽节点; 家宽只在「🏠 家宽节点」组和「👋 手动选择」里手动选。全部节点
-//       都是家宽时, 自动组成员回落 DIRECT 占位, 保证配置不因空组被内核拒绝加载。
+//       都是家宽时, 自动组成员改压「🏠 家宽节点」组(订阅里没家宽才退「👋 手动选择」),
+//       绝不以 DIRECT 作默认出口, 保证配置不因空组被内核拒绝加载。
 //       其余(各组默认地区/测速节奏/规则/DNS/dialer-proxy 处理)与 v3.4 完全一致。
 // v3.4: 每个精细分流组的第一位(默认选择)按全网主流推荐地区预置好, 用户需要时自己改:
 //       AI=美国(机主指定) / YouTube=香港 / Google=香港 / FCM=故障转移(固定不跳)
@@ -48,9 +49,15 @@ function main(config) {
   var homeRe = /(家宽|住宅|家庭宽带|residential)/i;
   function isHome(n) { return homeRe.test(n); }
   var autoPool = pool.filter(function (n) { return !isHome(n); });
-  // 全部节点都是家宽时 autoPool 为空: 自动组成员回落 DIRECT 占位保命,
-  // 否则空组会让内核直接拒绝加载整个配置(DIRECT 只是占位, 不会拿家宽测速)。
-  var autoMembers = autoPool.length > 0 ? autoPool : ["DIRECT"];
+  // 全部节点都是家宽时 autoPool 为空: 自动组成员改压「🏠 家宽节点」组
+  // (全家宽订阅正是站长的真实场景; 若订阅里连家宽节点也没有, 才退
+  // 「👋 手动选择」)。绝不以 DIRECT 作默认出口: mihomo 里 DIRECT 不是
+  // inert 占位, 而是真的会承载流量的出口, 支付/加密货币等敏感流量会
+  // 从真实 IP 直连目标站点。家宽组是纯手动 select 组, 经它出流量仍由
+  // 用户在该组里手动选节点, 只是不再让自动链静默直连。
+  // 注: autoMembers 只定自动组(AUTO/故障转移/负载均衡)与 9 条顺位链的
+  // 链尾; 家宽组本身在下面由 homeNodes 生成, 全家宽时一定存在。
+  var autoMembers = autoPool.length > 0 ? autoPool : (pool.some(isHome) ? ["🏠 家宽节点"] : ["👋 手动选择"]);
 
   var TEST_URL = "https://cp.cloudflare.com/generate_204";
   function autoGroup(name, members, tolerance) {
@@ -63,27 +70,27 @@ function main(config) {
 
   // ---------- 地区分组(通用识别: 国旗/中文/英文/城市/机场代码/缩写) ----------
   var regions = [
-    { label: "🇭🇰 香港",   re: /(🇭🇰|HKG|香港|Hong\s?Kong|(^|[^A-Z])HK([^A-Z]|$))/i },
-    { label: "🇹🇼 台湾",   re: /(🇹🇼|TPE|KHH|台湾|臺灣|台北|臺北|高雄|新北|桃园|Taiwan|(^|[^A-Z])TW([^A-Z]|$))/i },
-    { label: "🇯🇵 日本",   re: /(🇯🇵|NRT|HND|KIX|NGO|FUK|日本|东京|東京|大阪|名古屋|福冈|Japan|Tokyo|Osaka|(^|[^A-Z])JP([^A-Z]|$))/i },
-    { label: "🇰🇷 韩国",   re: /(🇰🇷|ICN|GMP|韩国|韓國|首尔|首爾|釜山|Korea|Seoul|(^|[^A-Z])KR([^A-Z]|$))/i },
-    { label: "🇸🇬 新加坡", re: /(🇸🇬|SIN|新加坡|狮城|獅城|Singapore|(^|[^A-Z])SG([^A-Z]|$))/i },
-    { label: "🇲🇾 马来西亚", re: /(🇲🇾|KUL|马来西亚|馬來西亞|吉隆坡|Malaysia|Kuala\s?Lumpur|(^|[^A-Z])MY([^A-Z]|$))/i },
-    { label: "🇹🇭 泰国",   re: /(🇹🇭|BKK|DMK|泰国|泰國|曼谷|Thailand|Bangkok|(^|[^A-Z])TH([^A-Z]|$))/i },
-    { label: "🇻🇳 越南",   re: /(🇻🇳|SGN|HAN|越南|胡志明|河内|河內|Vietnam|(^|[^A-Z])VN([^A-Z]|$))/i },
-    { label: "🇮🇩 印尼",   re: /(🇮🇩|CGK|印尼|印度尼西亚|雅加达|Indonesia|Jakarta|(^|[^A-Z])ID([^A-Z]|$))/i },
-    { label: "🇵🇭 菲律宾", re: /(🇵🇭|MNL|菲律宾|菲律賓|马尼拉|Philippines|Manila|(^|[^A-Z])PH([^A-Z]|$))/i },
-    { label: "🇮🇳 印度",   re: /(🇮🇳|DEL|BOM|印度|孟买|孟買|德里|India|Mumbai|(^|[^A-Z])IN([^A-Z]|$))/i },
-    { label: "🇦🇺 澳大利亚", re: /(🇦🇺|SYD|MEL|BNE|澳大利亚|澳洲|悉尼|墨尔本|墨爾本|Australia|Sydney|Melbourne|(^|[^A-Z])AU([^A-Z]|$))/i },
-    { label: "🇺🇸 美国",   re: /(🇺🇸|LAX|SFO|SJC|SEA|ORD|DFW|JFK|EWR|IAD|MIA|ATL|美国|美國|洛杉矶|洛杉磯|纽约|紐約|硅谷|矽谷|圣何塞|聖何塞|西雅图|芝加哥|达拉斯|達拉斯|迈阿密|United\s?States|America|Los\s?Angeles|New\s?York|San\s?Jose|Seattle|Chicago|Dallas|(^|[^A-Z])US([^A-Z]|$))/i },
-    { label: "🇨🇦 加拿大", re: /(🇨🇦|YYZ|YVR|加拿大|多伦多|多倫多|温哥华|溫哥華|Canada|Toronto|Vancouver|(^|[^A-Z])CA([^A-Z]|$))/i },
-    { label: "🇬🇧 英国",   re: /(🇬🇧|LHR|英国|英國|伦敦|倫敦|London|United\s?Kingdom|Britain|(^|[^A-Z])UK([^A-Z]|$)|(^|[^A-Z])GB([^A-Z]|$))/i },
-    { label: "🇩🇪 德国",   re: /(🇩🇪|FRA|MUC|德国|德國|法兰克福|法蘭克福|慕尼黑|Germany|Frankfurt|(^|[^A-Z])DE([^A-Z]|$))/i },
-    { label: "🇫🇷 法国",   re: /(🇫🇷|CDG|ORY|法国|法國|巴黎|France|Paris|(^|[^A-Z])FR([^A-Z]|$))/i },
-    { label: "🇳🇱 荷兰",   re: /(🇳🇱|AMS|荷兰|荷蘭|阿姆斯特丹|Netherlands|Amsterdam|(^|[^A-Z])NL([^A-Z]|$))/i },
-    { label: "🇷🇺 俄罗斯", re: /(🇷🇺|SVO|俄罗斯|俄羅斯|莫斯科|Russia|Moscow|(^|[^A-Z])RU([^A-Z]|$))/i },
-    { label: "🇹🇷 土耳其", re: /(🇹🇷|IST|土耳其|伊斯坦布尔|Turkey|Istanbul|(^|[^A-Z])TR([^A-Z]|$))/i },
-    { label: "🇧🇷 巴西",   re: /(🇧🇷|GRU|巴西|圣保罗|聖保羅|Brazil|Sao\s?Paulo|(^|[^A-Z])BR([^A-Z]|$))/i }
+    { label: "🇭🇰 香港",   re: /(🇭🇰|HKG|香港|Hong\s?Kong|(^|[^A-Za-z])HK([^A-Za-z]|$))/i },
+    { label: "🇹🇼 台湾",   re: /(🇹🇼|TPE|KHH|台湾|臺灣|台北|臺北|高雄|新北|桃园|Taiwan|(^|[^A-Za-z])TW([^A-Za-z]|$))/i },
+    { label: "🇯🇵 日本",   re: /(🇯🇵|NRT|HND|KIX|NGO|FUK|日本|东京|東京|大阪|名古屋|福冈|Japan|Tokyo|Osaka|(^|[^A-Za-z])JP([^A-Za-z]|$))/i },
+    { label: "🇰🇷 韩国",   re: /(🇰🇷|ICN|GMP|韩国|韓國|首尔|首爾|釜山|Korea|Seoul|(^|[^A-Za-z])KR([^A-Za-z]|$))/i },
+    { label: "🇸🇬 新加坡", re: /(🇸🇬|SIN|新加坡|狮城|獅城|Singapore|(^|[^A-Za-z])SG([^A-Za-z]|$))/i },
+    { label: "🇲🇾 马来西亚", re: /(🇲🇾|KUL|马来西亚|馬來西亞|吉隆坡|Malaysia|Kuala\s?Lumpur|(^|[^A-Za-z])MY([^A-Za-z]|$))/i },
+    { label: "🇹🇭 泰国",   re: /(🇹🇭|BKK|DMK|泰国|泰國|曼谷|Thailand|Bangkok|(^|[^A-Za-z])TH([^A-Za-z]|$))/i },
+    { label: "🇻🇳 越南",   re: /(🇻🇳|SGN|HAN|越南|胡志明|河内|河內|Vietnam|(^|[^A-Za-z])VN([^A-Za-z]|$))/i },
+    { label: "🇮🇩 印尼",   re: /(🇮🇩|CGK|印尼|印度尼西亚|雅加达|Indonesia|Jakarta|(^|[^A-Za-z])ID([^A-Za-z]|$))/i },
+    { label: "🇵🇭 菲律宾", re: /(🇵🇭|MNL|菲律宾|菲律賓|马尼拉|Philippines|Manila|(^|[^A-Za-z])PH([^A-Za-z]|$))/i },
+    { label: "🇮🇳 印度",   re: /(🇮🇳|DEL|BOM|印度|孟买|孟買|德里|India|Mumbai|(^|[^A-Za-z])IN([^A-Za-z]|$))/i },
+    { label: "🇦🇺 澳大利亚", re: /(🇦🇺|SYD|MEL|BNE|澳大利亚|澳洲|悉尼|墨尔本|墨爾本|Australia|Sydney|Melbourne|(^|[^A-Za-z])AU([^A-Za-z]|$))/i },
+    { label: "🇺🇸 美国",   re: /(🇺🇸|LAX|SFO|SJC|SEA|ORD|DFW|JFK|EWR|IAD|MIA|ATL|美国|美國|洛杉矶|洛杉磯|纽约|紐約|硅谷|矽谷|圣何塞|聖何塞|西雅图|芝加哥|达拉斯|達拉斯|迈阿密|United\s?States|America|Los\s?Angeles|New\s?York|San\s?Jose|Seattle|Chicago|Dallas|(^|[^A-Za-z])US([^A-Za-z]|$))/i },
+    { label: "🇨🇦 加拿大", re: /(🇨🇦|YYZ|YVR|加拿大|多伦多|多倫多|温哥华|溫哥華|Canada|Toronto|Vancouver|(^|[^A-Za-z])CA([^A-Za-z]|$))/i },
+    { label: "🇬🇧 英国",   re: /(🇬🇧|LHR|英国|英國|伦敦|倫敦|London|United\s?Kingdom|Britain|(^|[^A-Za-z])UK([^A-Za-z]|$)|(^|[^A-Za-z])GB([^A-Za-z]|$))/i },
+    { label: "🇩🇪 德国",   re: /(🇩🇪|FRA|MUC|德国|德國|法兰克福|法蘭克福|慕尼黑|Germany|Frankfurt|(^|[^A-Za-z])DE([^A-Za-z]|$))/i },
+    { label: "🇫🇷 法国",   re: /(🇫🇷|CDG|ORY|法国|法國|巴黎|France|Paris|(^|[^A-Za-z])FR([^A-Za-z]|$))/i },
+    { label: "🇳🇱 荷兰",   re: /(🇳🇱|AMS|荷兰|荷蘭|阿姆斯特丹|Netherlands|Amsterdam|(^|[^A-Za-z])NL([^A-Za-z]|$))/i },
+    { label: "🇷🇺 俄罗斯", re: /(🇷🇺|SVO|俄罗斯|俄羅斯|莫斯科|Russia|Moscow|(^|[^A-Za-z])RU([^A-Za-z]|$))/i },
+    { label: "🇹🇷 土耳其", re: /(🇹🇷|IST|土耳其|伊斯坦布尔|Turkey|Istanbul|(^|[^A-Za-z])TR([^A-Za-z]|$))/i },
+    { label: "🇧🇷 巴西",   re: /(🇧🇷|GRU|巴西|圣保罗|聖保羅|Brazil|Sao\s?Paulo|(^|[^A-Za-z])BR([^A-Za-z]|$))/i }
   ];
 
   var assigned = {};
@@ -101,6 +108,9 @@ function main(config) {
     regionGroups.push({ name: r.label, type: "select", proxies: [autoName].concat(members) });
     regionSelectors.push(r.label);
   });
+  // 同步点(L11): 「🌍 其他」组没有独立正则, 由上面 regions 表逐个认领后剩下
+  // 的 rest 自动得到; YAML 版 mihomo-universal.yaml 里「🌍 其他自动」/「🌍 其他」
+  // 的 exclude-filter 是手写巨型正则。地区表改一处, 另一处也要同步改。
   var rest = autoPool.filter(function (n) { return !assigned[n]; });
   if (rest.length > 0) {
     regionGroups.push(autoGroup("🌍 其他自动", rest, 50));
@@ -275,30 +285,38 @@ function main(config) {
   Object.keys(needed).forEach(function (n) {
     if (generatedNames[n] || proxyByName[n]) return;
     if (origByName[n]) { preserved.push(origByName[n]); return; }
-    // 原配置里也没有这个组: 兜底新建, 成员为所有非链式节点, 保证链不断
-    var front = pool.filter(function (x) { var px = proxyByName[x]; return !(px && px["dialer-proxy"]); });
+    // 原配置里也没有这个组: 兜底新建, 成员为所有非链式、非家宽节点, 保证链不断
+    // (家宽只许手动, 不能让链式节点自动经家宽前置拨出; 复用上面的 isHome 判断)。
+    // front 为空时才回落 DIRECT: 这个前置组本身不承载最终出口选择, 只被链式节点
+    // 当 dialer-proxy 用, 空组会让内核报 dialer-proxy not found 而拒绝加载整个
+    // 配置; DIRECT 在此只是让链式节点能直连其上游服务器的保命占位。
+    var front = pool.filter(function (x) { var px = proxyByName[x]; return !isHome(x) && !(px && px["dialer-proxy"]); });
     preserved.push({ name: n, type: "select", proxies: front.length > 0 ? front : ["DIRECT"] });
   });
   groups = groups.concat(regionGroups, extraGroups, preserved);
   config["proxy-groups"] = groups;
 
   // ---------- 去广告规则集(ACL4SSR, 每日自动更新, UnBan 先行防误杀) ----------
-  function adProvider(url, file) {
-    return { type: "http", behavior: "classical", format: "text", interval: 86400, url: url, path: "./ruleset/" + file };
+  function adProvider(url, file, format) {
+    return { type: "http", behavior: "classical", format: format || "text", interval: 86400, url: url, path: "./ruleset/" + file };
   }
   config["rule-providers"] = {
-    UnBan: adProvider("https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/UnBan.list", "UnBan.list"),
-    BanAD: adProvider("https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list", "BanAD.list"),
-    BanProgramAD: adProvider("https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanProgramAD.list", "BanProgramAD.list"),
-    BanEasyList: adProvider("https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyList.list", "BanEasyList.list")
+    UnBan: adProvider("https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@a7bdd9c97c3c/Clash/UnBan.list", "UnBan.list"),
+    BanAD: adProvider("https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@a7bdd9c97c3c/Clash/BanAD.list", "BanAD.list"),
+    BanProgramAD: adProvider("https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@a7bdd9c97c3c/Clash/BanProgramAD.list", "BanProgramAD.list"),
+    BanEasyList: adProvider("https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@a7bdd9c97c3c/Clash/BanEasyList.list", "BanEasyList.list"),
+    // 秋风去广告(AWAvenue): 与 YAML 版 rule-provider 同名/同 behavior/同 interval,
+    // format 为 yaml(与 YAML 版一致), 规则位置见下面 rules(白名单之后、服务分流之前)。
+    AWAvenue: adProvider("https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@8965815bf397/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml", "AWAvenue.yaml", "yaml")
   };
 
   // ---------- 分流规则(顺序即优先级) ----------
   config.rules = [
     // 防误杀白名单最先
     "RULE-SET,UnBan,DIRECT",
-    // 去广告四层: 程序广告(APP开屏/内嵌) + 广告域名 + EasyList + 内置广告分类
+    // 去广告: 程序广告(APP开屏/内嵌) + 秋风去广告补强 + 广告域名 + EasyList + 内置广告分类
     "RULE-SET,BanProgramAD,🍃 应用净化",
+    "RULE-SET,AWAvenue,🍃 应用净化",
     "RULE-SET,BanAD,🛑 广告拦截",
     "RULE-SET,BanEasyList,🛑 广告拦截",
     "GEOSITE,category-ads-all,🛑 广告拦截",

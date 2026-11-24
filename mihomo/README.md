@@ -81,7 +81,7 @@
 - **一个节点都没有**：订阅链接没换或写错，检查 `proxy-providers` 那一行。
 - **节点不进组（地区组空的）**：分组按节点名地区词认人（香港/🇭🇰/HK 都认）；节点名不带地区信息的，去「👋 手动选择」直接挑。
 
-## 分组默认表（与 FlClash v3.5 完全一致，本家族零出入）
+## 分组默认表（与 FlClash v3.5 策略一致，手动入口安排有差异）
 
 | 分组 | 默认走哪条线 | 说明 |
 |---|---|---|
@@ -131,12 +131,12 @@
 | 叫什么 | 干什么用 | 要装证书吗 | 来源 |
 |---|---|---|---|
 | ACL4SSR 规则四件套（UnBan/BanAD/BanProgramAD/BanEasyList） | 白名单防误杀 + 广告拦截 + 应用广告净化，和 FlClash 版同源 | 不用 | https://github.com/ACL4SSR/ACL4SSR |
-| 秋风去广告（AWAvenue）Clash 版规则集 | 在四件套之外再补一层 App 广告拦截 | 不用 | https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml |
+| 秋风去广告（AWAvenue）Clash 版规则集 | 在四件套之外再补一层 App 广告拦截 | 不用 | https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@8965815bf397/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml |
 
 提醒：规则集是远程引用的公开名单，**只用上面这种长期维护的知名源，别乱加来路不明的规则链接**。
 
 ## 与 FlClash 版的差别
 
-- 本家族就是源头，策略**零出入**；差别只在形式：FlClash 用 JS 覆写（导入订阅后运行时生成），YAML 版是把结果写死成配置文件。
+- 本家族就是源头，策略一致，手动入口安排有差异；差别只在形式：FlClash 用 JS 覆写（导入订阅后运行时生成），YAML 版是把结果写死成配置文件。（版本号：以实际 JS 覆写脚本 v3.5 为准；YAML 文件头注释原写“由 v3.4 移植”，已同步更正为 v3.5。）
 - YAML 版里订阅是一个 `proxy-providers` 入口：**多条订阅**的站长把 YAML 里那段按注释再复制几份即可（FlClash JS 版是给每个订阅自动套）。
 - ClashMeta 年久失修，个别新字段可能不认（见上文）；Stash/OpenClash 无此问题。
