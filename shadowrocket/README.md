@@ -87,7 +87,7 @@
 
 ## 网速优化做了什么
 
-- **DNS 用国内加密 DNS（DoH）打头**：doh.pub + 阿里 DoH 两个加密解析排前面，解析快、还防运营商污染；后面带 223.5.5.5 / 119.29.29.29 普通 DNS 兜底，DoH 万一抽风也不会断网。
+- **DNS 用国内加密 DNS（DoH）打头**：doh.pub + 阿里 DoH 两个加密解析排前面，解析快、还防运营商污染；后面带 223.5.5.5 / 119.29.29.29 普通 DNS 兜底，DoH 万一抽风也不会断网。（另：`fallback-dns-server` 已不再回落到系统明文 DNS，DoH 失败时解析失败，见配置注释。）
 - **直连域名单独走国内 DoH**（direct-dns-server）：国内网站不用绕远路解析，打开更快。
 - **fake-ip 兼容名单**（always-real-ip）：游戏联机、语音通话、时间同步、微软连通性检测这些域名返回真实 IP，不会被假 IP 弄坏（和 FlClash 版同一份名单）。
 - **劫持硬编码 DNS**（hijack-dns）：有些 App 写死了用 8.8.8.8 解析，强制收回来按规则走，防污染防绕过。
@@ -102,7 +102,7 @@
 
 | 叫什么 | 干什么用 | 要装证书吗 | 来源 |
 |---|---|---|---|
-| 秋风去广告（AWAvenue）模块版 | 在配置的域名拦截之外再补一层 App 广告拦截（规则型，主要是域名/IP 拦截） | 不用（规则部分不用 MITM） | https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Shadowrocket.module |
+| 秋风去广告（AWAvenue）模块版 | 在配置的域名拦截之外再补一层 App 广告拦截（规则型，主要是域名/IP 拦截） | 不用（规则部分不用 MITM） | https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@8965815bf397/Filters/AWAvenue-Ads-Rule-Shadowrocket.module |
 | blackmatrix7 分应用脚本（知乎助手等） | 针对单个 App 的深度去广告/净化，如知乎、微博 | 要（重写类必须装证书并信任） | 仓库 script 目录：https://github.com/blackmatrix7/ios_rule_script （小火箭支持为测试性质，个别功能可能不可用，介意就别装） |
 
 装模块的方法：小火箭「配置」页 →「模块」→ 右上角「+」→ 粘贴模块链接 → 导入后**把开关打开**才生效。
@@ -111,6 +111,7 @@
 ## 与 FlClash 版的差别（先说清，免得奇怪）
 
 - **地区组里不能逐个挑节点**：FlClash 版地区组是「自动组 + 全部节点」两层，小火箭的分组语法做不到一层里既放自动组又按名字筛节点，所以地区组直接就是自动测速组。想指定某个节点，去「👋 手动选择」里挑。
-- **倍率分组是近似**：FlClash 版是程序读节点名里的数字算倍率；小火箭只能用正则认「0.5x」「倍率2」这类写法，写法规矩的订阅没问题，写法太野的可能认不全。
+- **倍率分组是近似**：FlClash 版是程序读节点名里的数字算倍率；小火箭只能用正则认「0.5x」「倍率2」这类写法，写法规矩的订阅没问题，写法太野的可能认不全。还可能误判（比如 `X2Pro` 这类名字会被当成 2 倍率）；倍率分错组只影响省钱策略，不影响连通与安全。
 - **没有 UnBan 白名单表**：FlClash 版用的是 ACL4SSR 四件套（带防误杀白名单）；小火箭版改用 blackmatrix7 的广告表（它自家做了防误杀处理），效果接近，来源不同。
 - **节点名同时带两个地区词时**：FlClash 版只进先认到的那一个组；小火箭版可能同时进两个组，影响很小（测速会自己选快的）。
+- **google.cn / g.cn 会被重写到 google.com**：配置 `[URL Rewrite]` 段有两条（`^https?://(www.)?g.cn` 与 `^https?://(www.)?google.cn`，都 302 到 `https://www.google.com`），国内本可直连的 google.cn 会被改道走代理。这两条规则本身保留（不是误删）；想在国内直连 google.cn，就把配置里这两行删掉。
