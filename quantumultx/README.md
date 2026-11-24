@@ -97,23 +97,30 @@
 - **服务器测速地址换成 Cloudflare 的 204 地址**（server_check_url）：和 FlClash 版同一个测速地址，测出来的延迟口径一致；超时 3 秒，坏节点不拖后腿。
 - **节点不支持 UDP 就拒绝**（fallback_udp_policy = reject）：防 UDP 绕过代理。
 - **关掉 IPv6 解析**（no-ipv6）：和 FlClash 版一致，避开 IPv6 绕路与泄漏。
-- **资源解析器已预置**（KOP-XIAO 的 QuantumultX 解析器，长期维护）：订阅里带特殊格式的节点也能被正确解析进来，不用另外找。
+- **资源解析器已预置**（KOP-XIAO 的 QuantumultX 解析器，长期维护，已 pin 到固定 commit 的 jsDelivr 链接）：订阅里带特殊格式的节点也能被正确解析进来，不用另外找。
+  ⚠️ 注意：这个解析器是一段远程 JS，**每次订阅更新时都会下载并执行，能看到订阅原文里的全部节点 UUID/密码**（订阅原文就是节点凭证本身），理论上具备外传凭证的能力。只在需要解析特殊格式订阅时启用它，不用时可以在配置里删掉 `resource_parser_url` 这一行；留着用就是接受这个风险。
 
 ## 附带/推荐的分流与重写（第三方，知名维护源）
 
 | 叫什么 | 干什么用 | 要装证书吗 | 来源 |
 |---|---|---|---|
-| 秋风去广告（AWAvenue）QX 版分流 | App 广告域名拦截，已预置在 [filter_remote] 第一行，走「🍃 应用净化」 | 不用 | https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-QuantumultX.list |
-| blackmatrix7 AllInOne 重写 | 几十个 App 的去广告/净化大合集重写，已预置在 [rewrite_remote] | 要（必须装证书并信任，不装自动不工作） | https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rewrite/QuantumultX/AllInOne/AllInOne.conf |
-| Orz-3 YouTube 重写 | YouTube 去广告 + 字幕翻译增强（可选，自己加到 [rewrite_remote]） | 要 | https://raw.githubusercontent.com/Orz-3/QuantumultX/master/YouTube.conf |
-| KOP-XIAO 资源解析器 | 让各种格式的订阅节点能被圈 X 正确解析，已预置在配置里 | 不用 | https://raw.githubusercontent.com/KOP-XIAO/QuantumultX/master/Scripts/resource-parser.js |
+| 秋风去广告（AWAvenue）QX 版分流 | App 广告域名拦截，已预置在 [filter_remote] 第一行，走「🍃 应用净化」 | 不用 | https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@8965815bf397/Filters/AWAvenue-Ads-Rule-QuantumultX.list |
+| blackmatrix7 AllInOne 重写 | 几十个 App 的去广告/净化大合集重写，已预置在 [rewrite_remote] | 要（必须装证书并信任，不装自动不工作） | https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@0b6897dc17e0/rewrite/QuantumultX/AllInOne/AllInOne.conf |
+| Orz-3 YouTube 重写 | YouTube 去广告 + 字幕翻译增强（可选，自己加到 [rewrite_remote]） | 要 | https://cdn.jsdelivr.net/gh/Orz-3/QuantumultX@a014cd9f8321/YouTube.conf |
+| KOP-XIAO 资源解析器 | 让各种格式的订阅节点能被圈 X 正确解析，已预置在配置里；每次订阅更新时执行，能看到订阅里全部节点 UUID/密码（见上文提醒） | 不用 | https://cdn.jsdelivr.net/gh/KOP-XIAO/QuantumultX@449d1075cc99/Scripts/resource-parser.js |
 
 提醒：重写和脚本是别人写的代码，**只从长期维护的知名源拿，别乱装来路不明的**。
+
+## 本地 / 远程规则的生效顺序（待核实）
+
+- AI 等服务规则写在配置的 `[filter_local]`，广告规则（秋风、blackmatrix7）写在 `[filter_remote]`。
+- 顺序假设（未实测，待核实）：若圈 X 先算本地规则，一个广告域名可能先命中服务组而非拦截——比如某个域名既在广告表里又在服务规则里时，不一定先被拦住。mihomo / FlClash 的顺序是白名单 → 广告 → 服务，QX 这种本地/远程拆分写法下，同样的顺序保证没有写在配置或本文档里。
+- 实际使用中若发现广告没拦住，先按上面「常见问题」里的方法确认是不是被误拦，再考虑把广告规则移到本地规则前面。
 
 ## 与 FlClash 版的差别
 
 - **故障转移组没有「检查间隔」参数**：圈 X 的 available 类型没有 interval 设置，它是连接失败时即时顺延到下一个节点，效果一样甚至更及时，只是参数没法写。
 - **DNS 分流是近似的**：FlClash 版国外域名走国外 DoH、国内走国内 DoH；圈 X 统一走一条 DoH（防污染没问题，个别 CDN 定位可能略差）。
-- **倍率分组是近似**：靠正则认「0.5x」「倍率2」这类写法，写法太野的节点名可能认不全。
+- **倍率分组是近似**：靠正则认「0.5x」「倍率2」这类写法，写法太野的节点名可能认不全，还可能误判（比如 `X2Pro` 这类名字会被当成 2 倍率）；倍率分错组只影响省钱策略，不影响连通与安全。
 - **节点名同时带两个地区词时**可能同时进两个组（FlClash 版只进先认到的一个），影响很小。
 - **去广告来源不同**：FlClash 版是 ACL4SSR 规则集；圈 X 版是 blackmatrix7 广告分流 + 秋风分流 + AllInOne 重写，层数更多。
