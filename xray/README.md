@@ -93,7 +93,21 @@ v2rayNG/V2rayN 里所有走代理的服务共用你当前选中的那一个节�
 - **Mux 连接复用**：V2rayN 节点设置/核心设置里的「Mux 多路复用」，v2rayNG 新版在设置里也有。把多个小连接挤进一条隧道，高延迟线路上刷网页更跟手；但看视频/下载大文件时可能略降速，不舒服就关掉。默认建议：日常刷网页开、下载关。
 - **测速挑节点**：这一家没有自动测速组，靠 APP 的「测试真延迟」给节点排序，手动挑延迟低的当当前节点；**注意别频繁全量测速**，和 FlClash 版省额度的思路一样，测速也是要走节点流量的。
 - **geosite/geoip 保持更新**：分类库新，国内/国外分得才准，误判少了自然少绕路。更新入口见上文各 APP 步骤。
-- **DNS**：v2rayNG/V2rayN 的 DNS 设置里建议填国内加密 DNS（如阿里 DoH），防污染；这一项各版本位置不一，在设置里搜「DNS」即可，本包不写死以免和版本对不上。
+- **DNS**：v2rayNG/V2rayN 的 DNS 设置里建议填国内加密 DNS（如阿里 DoH），防污染；这一项各版本位置不一，在设置里搜「DNS」即可，本包不写死以免和版本对不上。自己拼完整配置的人，可参考下面这段 DNS 段示例（仅示例，`xray-routing.json` 本身仍不含 DNS 段——只给示例，不改路由文件）：
+
+  ```json
+  "dns": {
+    "servers": [
+      { "address": "https://dns.alidns.com/dns-query", "domains": ["geosite:cn", "geosite:private"] },
+      { "address": "https://doh.pub/dns-query", "domains": ["geosite:cn", "geosite:private"] },
+      { "address": "https://dns.cloudflare.com/dns-query", "domains": ["geosite:geolocation-!cn"] },
+      { "address": "https://dns.google/dns-query", "domains": ["geosite:geolocation-!cn"] }
+    ],
+    "queryStrategy": "UseIPv4"
+  }
+  ```
+
+  口径与 mihomo 家族一致：国内域名走阿里 DoH（备用腾讯 DoH），国外域名走 Cloudflare DoH（备用 Google DoH），只解析 IPv4；拼的时候把这段与路由段并排放在完整配置的顶层即可。
 
 ## 规则来源
 

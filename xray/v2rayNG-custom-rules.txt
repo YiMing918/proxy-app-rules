@@ -1,5 +1,7 @@
 # v2rayNG 旧版「设置 → 自定义规则」三栏清单（新版请用同文件夹的 JSON 导入）
 # 用法：把每一栏下面的行，原样粘到对应栏里（拦截 / 直连 / 代理），一行一条。
+# 兜底说明：三栏都没列出的流量默认走哪，取决于 APP 的代理模式——v2rayNG 默认走代理出站；若你在 APP 里设了全局直连，则走直连。
+# 本文件没有 catch-all 兜底条；想要全量兜底请用同文件夹的 JSON 版（v2rayNG-V2rayN-routing.json），其末条是 network: tcp,udp 全量走代理的兜底规则。
 
 ===== 拦截（BLOCKED） =====
 geosite:category-ads-all
