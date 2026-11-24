@@ -99,8 +99,8 @@ Surge 里订阅是加在配置里的：主页 →「设置（齿轮）」→「�
 
 | 叫什么 | 干什么用 | 要装证书吗 | 来源 |
 |---|---|---|---|
-| 秋风去广告（AWAvenue）Surge 模块 | App 广告拦截加强（规则为主） | 规则部分不用；带脚本的部分要 | https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-module.sgmodule |
-| blackmatrix7 知乎助手（示例） | 知乎去广告 + 净化；同仓库 script 目录还有贴吧、Quora 等分应用模块 | 要 | https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zheye/zheye.sgmodule |
+| 秋风去广告（AWAvenue）Surge 模块 | App 广告拦截加强（规则为主） | 规则部分不用；带脚本的部分要 | https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@8965815bf397/Filters/AWAvenue-Ads-Rule-Surge-module.sgmodule |
+| blackmatrix7 知乎助手（示例） | 知乎去广告 + 净化；同仓库 script 目录还有贴吧、Quora 等分应用模块 | 要 | https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@0b6897dc17e0/script/zheye/zheye.sgmodule |
 
 装模块的方法：Surge「设置 → 模块」→「安装新模块」→ 粘贴链接 → 导入后确认模块开关是开的。
 提醒：模块是别人写的代码，**只从长期维护的知名源拿，别乱装来路不明的**。Surfboard 不支持模块，跳过这一节即可。
@@ -108,7 +108,7 @@ Surge 里订阅是加在配置里的：主页 →「设置（齿轮）」→「�
 ## 与 FlClash 版的差别
 
 - **地区组里不能逐个挑节点**：和 Surge 的分组语法有关——地区组直接就是自动测速组（FlClash 版是「自动组+全部节点」两层）。想指定节点去「👋 手动选择」。
-- **倍率分组是近似**：靠正则认「0.5x」「倍率2」这类写法，写法太野的节点名可能认不全。
+- **倍率分组是近似**：靠正则认「0.5x」「倍率2」这类写法，写法太野的节点名可能认不全，还可能误判（比如 `X2Pro` 这类名字会被当成 2 倍率）；倍率分错组只影响省钱策略，不影响连通与安全。
 - **没有 UnBan 白名单表**：改用 blackmatrix7 广告表（自家做了防误杀），效果接近。
 - **节点名同时带两个地区词时**可能同时进两个组，影响很小。
 - **Surfboard**：模块/脚本体系不支持、个别参数被忽略（见上文），核心分流一致。
