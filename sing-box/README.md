@@ -23,6 +23,8 @@ sing-box **不会按节点名字自动分地区组**，这是它内核的机制�
 2. 更省事：先在 APP 里正常导入你的订阅，再把这份配置当「规则模板」对照着改。
 不换的话，分组是空架子，连不出去。**这是 sing-box 家族的硬限制，不是配置写错了。**
 
+**占位节点必须替换 server/uuid，否则流量会尝试连接 example.com:443**——10 个占位出站的 server 现在都是 `example.com`、uuid 全是 0，不换就会向 example.com 发起真实握手、全网断连。
+
 ## 怎么用（按 APP 分开看）
 
 ### SFA / sing-box 官方端（安卓/苹果）
@@ -68,10 +70,10 @@ sing-box **不会按节点名字自动分地区组**，这是它内核的机制�
 | 分组 | 默认走哪条线 | 说明 |
 |---|---|---|
 | 🚀 节点选择 | ♻️ 自动选择 | 总开关，平时不用动 |
-| 🤖 AI服务 | 🇺🇸 美国 | ChatGPT、Claude 等 |
+| 🤖 AI服务 | 🇺🇸 美国 | ChatGPT、Claude、Gemini、Copilot 等 |
 | 📺 YouTube | 🇭🇰 香港 | |
 | 🔍 Google服务 | 🇭🇰 香港 | |
-| 🔔 FCM推送 | 🛡️ 故障转移 | 见下方出入说明 |
+| 🔔 FCM推送 | ♻️ 自动选择（url-test 代替） | 见下方出入说明 |
 | ✈️ Telegram | 🇸🇬 新加坡 | |
 | 🎬 流媒体 | 🇸🇬 新加坡 | Netflix、Disney+、HBO、Spotify、Emby |
 | 🎮 游戏平台 | 🇯🇵 日本 | Steam 等（Steam 下载本身直连） |
@@ -108,7 +110,7 @@ sing-box **不会按节点名字自动分地区组**，这是它内核的机制�
 ## 网速优化做了什么
 
 - **DNS 新格式 + 加密解析**：国外走 Cloudflare DoH、国内走阿里 DoH，按域名分开解析，又快又防污染、CDN 就近。
-- **fake-ip 开启**：先给假 IP 后解析，省解析等待；fake-ip 结果会存盘缓存（store_fakeip），重启不丢。
+- **fake-ip 开启**：先给假 IP 后解析，省解析等待；fake-ip 结果会存盘缓存（store_fakeip），重启不丢。但 STUN、NTP/时间同步、微软连通性检测（msftconnecttest/msftncsi）、游戏联机（战网/暴雪/Xbox/任天堂/PlayStation）等域名不走 fake-ip：JSON 的 DNS 规则里有一条专属排除规则，在 fakeip 规则之前把它们改走国内 DoH 真实解析——这些服务对 IP 敏感，拿到假 IP 会导致通话、校时、联机失败。名单与 mihomo 家族的 fake-ip-filter 一致。
 - **嗅探开启**（route 第一动作就是 sniff）：App 直接连 IP 时也认得出域名，分流命中准；DNS 流量自动劫持回本机解析（hijack-dns），防 App 用自带 DNS 绕过。
 - **测速容差 50 毫秒 + 间隔 600 秒**：不频繁跳线、不烧额度，和 FlClash 版一致。
 - **规则集用二进制格式（.srs）**：规则文件更小、加载更快；地址全是官方 GitHub 源，APP 会按配置每天自动拉新。

@@ -60,6 +60,29 @@
         "server": "doh-remote"
       },
       {
+        "domain_suffix": [
+          "msftconnecttest.com",
+          "msftncsi.com",
+          "battlenet.com",
+          "blizzard.com",
+          "srv.nintendo.net",
+          "stun.playstation.net",
+          "sonyentertainmentnetwork.com",
+          "xboxlive.com",
+          "music.163.com",
+          "time.windows.com",
+          "time.apple.com",
+          "time.google.com",
+          "time.nist.gov",
+          "pool.ntp.org"
+        ],
+        "domain_keyword": [
+          "stun",
+          "ntp"
+        ],
+        "server": "doh-cn"
+      },
+      {
         "query_type": [
           "A"
         ],
@@ -763,7 +786,8 @@
       {
         "rule_set": [
           "geosite-openai",
-          "geosite-anthropic"
+          "geosite-anthropic",
+          "geosite-category-ai-not-cn"
         ],
         "outbound": "🤖 AI服务"
       },
@@ -909,7 +933,7 @@
         "type": "remote",
         "tag": "ads-all",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-ads-all.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-category-ads-all.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -917,7 +941,7 @@
         "type": "remote",
         "tag": "ads-awa",
         "format": "source",
-        "url": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Singbox.json",
+        "url": "https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@8965815bf397/Filters/AWAvenue-Ads-Rule-Singbox.json",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -925,7 +949,7 @@
         "type": "remote",
         "tag": "geosite-cn",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-cn.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -933,7 +957,7 @@
         "type": "remote",
         "tag": "geoip-cn",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@66c864fcfe15/geoip-cn.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -941,7 +965,7 @@
         "type": "remote",
         "tag": "geosite-openai",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-openai.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-openai.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -949,7 +973,15 @@
         "type": "remote",
         "tag": "geosite-anthropic",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-anthropic.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-anthropic.srs",
+        "download_detour": "direct",
+        "update_interval": "24h"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-category-ai-not-cn",
+        "format": "binary",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-category-ai-!cn.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -957,7 +989,7 @@
         "type": "remote",
         "tag": "geosite-youtube",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-youtube.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-youtube.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -965,7 +997,7 @@
         "type": "remote",
         "tag": "geosite-google",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-google.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-google.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -973,7 +1005,7 @@
         "type": "remote",
         "tag": "geosite-telegram",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-telegram.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-telegram.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -981,7 +1013,7 @@
         "type": "remote",
         "tag": "geosite-netflix",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-netflix.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-netflix.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -989,7 +1021,7 @@
         "type": "remote",
         "tag": "geosite-disney",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-disney.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-disney.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -997,7 +1029,7 @@
         "type": "remote",
         "tag": "geosite-hbo",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-hbo.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-hbo.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1005,7 +1037,7 @@
         "type": "remote",
         "tag": "geosite-spotify",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-spotify.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-spotify.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1013,7 +1045,7 @@
         "type": "remote",
         "tag": "geosite-github",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-github.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-github.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1021,7 +1053,7 @@
         "type": "remote",
         "tag": "geosite-steam",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-steam.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-steam.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1029,7 +1061,7 @@
         "type": "remote",
         "tag": "geosite-twitter",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-twitter.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-twitter.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1037,7 +1069,7 @@
         "type": "remote",
         "tag": "geosite-facebook",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-facebook.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-facebook.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1045,7 +1077,7 @@
         "type": "remote",
         "tag": "geosite-instagram",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-instagram.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-instagram.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1053,7 +1085,7 @@
         "type": "remote",
         "tag": "geosite-tiktok",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-tiktok.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-tiktok.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1061,7 +1093,7 @@
         "type": "remote",
         "tag": "geosite-paypal",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-paypal.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-paypal.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1069,7 +1101,7 @@
         "type": "remote",
         "tag": "geosite-crypto",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-cryptocurrency.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-category-cryptocurrency.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1077,7 +1109,7 @@
         "type": "remote",
         "tag": "geosite-bilibili",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-bilibili.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-bilibili.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1085,7 +1117,7 @@
         "type": "remote",
         "tag": "geosite-apple",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-apple.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-apple.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1093,7 +1125,7 @@
         "type": "remote",
         "tag": "geosite-microsoft",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-microsoft.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-microsoft.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       },
@@ -1101,7 +1133,7 @@
         "type": "remote",
         "tag": "geosite-geolocation-not-cn",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-!cn.srs",
+        "url": "https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@ae9d27f1d1ec/geosite-geolocation-!cn.srs",
         "download_detour": "direct",
         "update_interval": "24h"
       }
