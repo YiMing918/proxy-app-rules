@@ -101,8 +101,8 @@
 
 | 叫什么 | 干什么用 | 要装证书吗 | 来源 |
 |---|---|---|---|
-| 秋风去广告（AWAvenue） | App 开屏/内嵌广告拦截（规则型，已预置在配置的 [Plugin] 里，默认开） | 不用 | https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Loon.module |
-| blackmatrix7 知乎助手（示例） | 知乎去广告 + 阅读净化；同仓库 script 目录还有贴吧、Quora 等分应用插件，装法相同 | 要（重写类必须装证书并信任） | https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zheye/zheye.lnplugin |
+| 秋风去广告（AWAvenue） | App 开屏/内嵌广告拦截（规则型，已预置在配置的 [Plugin] 里，默认开） | 不用 | https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@8965815bf397/Filters/AWAvenue-Ads-Rule-Loon.module |
+| blackmatrix7 知乎助手（示例） | 知乎去广告 + 阅读净化；同仓库 script 目录还有贴吧、Quora 等分应用插件，装法相同 | 要（重写类必须装证书并信任） | https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@0b6897dc17e0/script/zheye/zheye.lnplugin |
 
 装插件的方法：Loon 底部「插件」→ 右上角「+」→ 粘贴插件链接 → 导入后**把开关打开**才生效。
 提醒：插件是别人写的代码，**只从长期维护的知名源拿，别乱装来路不明的**。
@@ -110,6 +110,6 @@
 ## 与 FlClash 版的差别
 
 - **DNS 分流是近似的**：FlClash 版能做到「国外域名走 Cloudflare/Google 的 DoH、国内走国内 DoH」；Loon 的 DNS 不按规则分流，这里统一用国内 DoH（加密、防污染没问题，只是国外域名也用国内 DoH 解析，个别 CDN 定位可能略差一点）。
-- **倍率分组是近似**：靠正则认「0.5x」「倍率2」这类写法，写法太野的节点名可能认不全。
+- **倍率分组是近似**：靠正则认「0.5x」「倍率2」这类写法，写法太野的节点名可能认不全，还可能误判（比如 `X2Pro` 这类名字会被当成 2 倍率）；倍率分错组只影响省钱策略，不影响连通与安全。
 - **节点名同时带两个地区词时**可能同时进两个组（FlClash 版只进先认到的一个），影响很小。
 - **去广告来源不同**：FlClash 版是 ACL4SSR 四件套；Loon 版是 blackmatrix7 广告表 + 秋风插件，效果接近。
