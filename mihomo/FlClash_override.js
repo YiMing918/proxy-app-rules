@@ -1,4 +1,10 @@
-// FlClash 覆写脚本 - qi 全功能版 v3.5 (省额度版, 基于 v3.4 改)
+// FlClash 覆写脚本 - qi 全功能版 v3.6 (省额度版, 基于 v3.5 改)
+// v3.6: 只改测速的两处毛病, 分组/规则/DNS/测速节奏与 v3.5 完全一致。
+//       ①测速地址 cp.cloudflare.com -> www.gstatic.com/generate_204:
+//         同一订阅在 v2rayNG 里大半节点能测出延迟, 在 FlClash 里却全超时
+//         但实际能用——原测速地址经很多节点根本测不通, 误判成节点全死。
+//       ②测速超时 3000 -> 5000 毫秒: 节点一多批量测速时 3 秒太紧,
+//         好节点也被挤成超时。改完重新测速, 延迟数字才作数。
 // v3.5: 落实两条硬规矩。①顺位兜底链: 带地区默认的精细分流组(AI/YouTube/Google/
 //       Telegram/流媒体/游戏/社交/支付/加密货币)第一位改走「·顺位」故障转移链——
 //       默认地区没节点时自动顺位落到下一个地区, 链尾压「♻️ 自动选择」, 组永不为空;
@@ -59,12 +65,12 @@ function main(config) {
   // 链尾; 家宽组本身在下面由 homeNodes 生成, 全家宽时一定存在。
   var autoMembers = autoPool.length > 0 ? autoPool : (pool.some(isHome) ? ["🏠 家宽节点"] : ["👋 手动选择"]);
 
-  var TEST_URL = "https://cp.cloudflare.com/generate_204";
+  var TEST_URL = "https://www.gstatic.com/generate_204";
   function autoGroup(name, members, tolerance) {
     return {
       name: name, type: "url-test", proxies: members,
       url: TEST_URL, interval: 600, tolerance: tolerance || 50,
-      lazy: true, timeout: 3000, "max-failed-times": 3
+      lazy: true, timeout: 5000, "max-failed-times": 3
     };
   }
 
@@ -181,11 +187,11 @@ function main(config) {
   groups.push(autoGroup(AUTO, autoMembers, 50));
   groups.push({
     name: FALLBACK, type: "fallback", proxies: autoMembers.slice(),
-    url: TEST_URL, interval: 600, lazy: true, timeout: 3000, "max-failed-times": 3
+    url: TEST_URL, interval: 600, lazy: true, timeout: 5000, "max-failed-times": 3
   });
   groups.push({
     name: LB, type: "load-balance", strategy: "consistent-hashing", proxies: autoMembers.slice(),
-    url: TEST_URL, interval: 600, lazy: true, timeout: 3000
+    url: TEST_URL, interval: 600, lazy: true, timeout: 5000
   });
   groups.push({ name: MANUAL, type: "select", proxies: pool.slice() });
 
@@ -230,7 +236,7 @@ function main(config) {
     members.push(AUTO);
     return {
       name: svcName + "·顺位", type: "fallback", proxies: members,
-      url: TEST_URL, interval: 600, lazy: true, timeout: 3000, "max-failed-times": 3
+      url: TEST_URL, interval: 600, lazy: true, timeout: 5000, "max-failed-times": 3
     };
   }
   var serviceGroups = [
