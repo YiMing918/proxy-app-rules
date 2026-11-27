@@ -1,4 +1,12 @@
-// FlClash 覆写脚本 - qi 全功能版 v3.6 (省额度版, 基于 v3.5 改)
+// FlClash 覆写脚本 - qi 全功能版 v3.7 (省额度版, 基于 v3.6 改)
+// v3.7: 只修地区识别的一个老毛病, 分组/规则/DNS/测速节奏与 v3.6 完全一致。
+//       三字母机场代码(FRA/HKG/SFO 等)以前是裸子串匹配: "San Francisco"
+//       开头的 FRA 会把它撞进德国组, 又进不了美国组和"其他"组。全家族
+//       (mihomo YAML/Surge/Loon/QuantumultX/Shadowrocket 同步)给三字母
+//       代码统一加上与两字母代码同款的边界 (^|[^A-Za-z])CODE([^A-Za-z]|$);
+//       美国组补 San Francisco/旧金山/迈阿密/亚特兰大/华盛顿, 印度补
+//       Delhi, 越南补 Hanoi, 日本补 Fukuoka——这几个城市名以前靠代码
+//       子串命中, 加边界后改靠城市名命中, 不回退。
 // v3.6: 只改测速的两处毛病, 分组/规则/DNS/测速节奏与 v3.5 完全一致。
 //       ①测速地址 cp.cloudflare.com -> www.gstatic.com/generate_204:
 //         同一订阅在 v2rayNG 里大半节点能测出延迟, 在 FlClash 里却全超时
@@ -76,27 +84,27 @@ function main(config) {
 
   // ---------- 地区分组(通用识别: 国旗/中文/英文/城市/机场代码/缩写) ----------
   var regions = [
-    { label: "🇭🇰 香港",   re: /(🇭🇰|HKG|香港|Hong\s?Kong|(^|[^A-Za-z])HK([^A-Za-z]|$))/i },
-    { label: "🇹🇼 台湾",   re: /(🇹🇼|TPE|KHH|台湾|臺灣|台北|臺北|高雄|新北|桃园|Taiwan|(^|[^A-Za-z])TW([^A-Za-z]|$))/i },
-    { label: "🇯🇵 日本",   re: /(🇯🇵|NRT|HND|KIX|NGO|FUK|日本|东京|東京|大阪|名古屋|福冈|Japan|Tokyo|Osaka|(^|[^A-Za-z])JP([^A-Za-z]|$))/i },
-    { label: "🇰🇷 韩国",   re: /(🇰🇷|ICN|GMP|韩国|韓國|首尔|首爾|釜山|Korea|Seoul|(^|[^A-Za-z])KR([^A-Za-z]|$))/i },
-    { label: "🇸🇬 新加坡", re: /(🇸🇬|SIN|新加坡|狮城|獅城|Singapore|(^|[^A-Za-z])SG([^A-Za-z]|$))/i },
-    { label: "🇲🇾 马来西亚", re: /(🇲🇾|KUL|马来西亚|馬來西亞|吉隆坡|Malaysia|Kuala\s?Lumpur|(^|[^A-Za-z])MY([^A-Za-z]|$))/i },
-    { label: "🇹🇭 泰国",   re: /(🇹🇭|BKK|DMK|泰国|泰國|曼谷|Thailand|Bangkok|(^|[^A-Za-z])TH([^A-Za-z]|$))/i },
-    { label: "🇻🇳 越南",   re: /(🇻🇳|SGN|HAN|越南|胡志明|河内|河內|Vietnam|(^|[^A-Za-z])VN([^A-Za-z]|$))/i },
-    { label: "🇮🇩 印尼",   re: /(🇮🇩|CGK|印尼|印度尼西亚|雅加达|Indonesia|Jakarta|(^|[^A-Za-z])ID([^A-Za-z]|$))/i },
-    { label: "🇵🇭 菲律宾", re: /(🇵🇭|MNL|菲律宾|菲律賓|马尼拉|Philippines|Manila|(^|[^A-Za-z])PH([^A-Za-z]|$))/i },
-    { label: "🇮🇳 印度",   re: /(🇮🇳|DEL|BOM|印度|孟买|孟買|德里|India|Mumbai|(^|[^A-Za-z])IN([^A-Za-z]|$))/i },
-    { label: "🇦🇺 澳大利亚", re: /(🇦🇺|SYD|MEL|BNE|澳大利亚|澳洲|悉尼|墨尔本|墨爾本|Australia|Sydney|Melbourne|(^|[^A-Za-z])AU([^A-Za-z]|$))/i },
-    { label: "🇺🇸 美国",   re: /(🇺🇸|LAX|SFO|SJC|SEA|ORD|DFW|JFK|EWR|IAD|MIA|ATL|美国|美國|洛杉矶|洛杉磯|纽约|紐約|硅谷|矽谷|圣何塞|聖何塞|西雅图|芝加哥|达拉斯|達拉斯|迈阿密|United\s?States|America|Los\s?Angeles|New\s?York|San\s?Jose|Seattle|Chicago|Dallas|(^|[^A-Za-z])US([^A-Za-z]|$))/i },
-    { label: "🇨🇦 加拿大", re: /(🇨🇦|YYZ|YVR|加拿大|多伦多|多倫多|温哥华|溫哥華|Canada|Toronto|Vancouver|(^|[^A-Za-z])CA([^A-Za-z]|$))/i },
-    { label: "🇬🇧 英国",   re: /(🇬🇧|LHR|英国|英國|伦敦|倫敦|London|United\s?Kingdom|Britain|(^|[^A-Za-z])UK([^A-Za-z]|$)|(^|[^A-Za-z])GB([^A-Za-z]|$))/i },
-    { label: "🇩🇪 德国",   re: /(🇩🇪|FRA|MUC|德国|德國|法兰克福|法蘭克福|慕尼黑|Germany|Frankfurt|(^|[^A-Za-z])DE([^A-Za-z]|$))/i },
-    { label: "🇫🇷 法国",   re: /(🇫🇷|CDG|ORY|法国|法國|巴黎|France|Paris|(^|[^A-Za-z])FR([^A-Za-z]|$))/i },
-    { label: "🇳🇱 荷兰",   re: /(🇳🇱|AMS|荷兰|荷蘭|阿姆斯特丹|Netherlands|Amsterdam|(^|[^A-Za-z])NL([^A-Za-z]|$))/i },
-    { label: "🇷🇺 俄罗斯", re: /(🇷🇺|SVO|俄罗斯|俄羅斯|莫斯科|Russia|Moscow|(^|[^A-Za-z])RU([^A-Za-z]|$))/i },
-    { label: "🇹🇷 土耳其", re: /(🇹🇷|IST|土耳其|伊斯坦布尔|Turkey|Istanbul|(^|[^A-Za-z])TR([^A-Za-z]|$))/i },
-    { label: "🇧🇷 巴西",   re: /(🇧🇷|GRU|巴西|圣保罗|聖保羅|Brazil|Sao\s?Paulo|(^|[^A-Za-z])BR([^A-Za-z]|$))/i }
+    { label: "🇭🇰 香港",   re: /(🇭🇰|(^|[^A-Za-z])HKG([^A-Za-z]|$)|香港|Hong\s?Kong|(^|[^A-Za-z])HK([^A-Za-z]|$))/i },
+    { label: "🇹🇼 台湾",   re: /(🇹🇼|(^|[^A-Za-z])TPE([^A-Za-z]|$)|(^|[^A-Za-z])KHH([^A-Za-z]|$)|台湾|臺灣|台北|臺北|高雄|新北|桃园|Taiwan|(^|[^A-Za-z])TW([^A-Za-z]|$))/i },
+    { label: "🇯🇵 日本",   re: /(🇯🇵|(^|[^A-Za-z])NRT([^A-Za-z]|$)|(^|[^A-Za-z])HND([^A-Za-z]|$)|(^|[^A-Za-z])KIX([^A-Za-z]|$)|(^|[^A-Za-z])NGO([^A-Za-z]|$)|(^|[^A-Za-z])FUK([^A-Za-z]|$)|日本|东京|東京|大阪|名古屋|福冈|Japan|Tokyo|Osaka|Fukuoka|(^|[^A-Za-z])JP([^A-Za-z]|$))/i },
+    { label: "🇰🇷 韩国",   re: /(🇰🇷|(^|[^A-Za-z])ICN([^A-Za-z]|$)|(^|[^A-Za-z])GMP([^A-Za-z]|$)|韩国|韓國|首尔|首爾|釜山|Korea|Seoul|(^|[^A-Za-z])KR([^A-Za-z]|$))/i },
+    { label: "🇸🇬 新加坡", re: /(🇸🇬|(^|[^A-Za-z])SIN([^A-Za-z]|$)|新加坡|狮城|獅城|Singapore|(^|[^A-Za-z])SG([^A-Za-z]|$))/i },
+    { label: "🇲🇾 马来西亚", re: /(🇲🇾|(^|[^A-Za-z])KUL([^A-Za-z]|$)|马来西亚|馬來西亞|吉隆坡|Malaysia|Kuala\s?Lumpur|(^|[^A-Za-z])MY([^A-Za-z]|$))/i },
+    { label: "🇹🇭 泰国",   re: /(🇹🇭|(^|[^A-Za-z])BKK([^A-Za-z]|$)|(^|[^A-Za-z])DMK([^A-Za-z]|$)|泰国|泰國|曼谷|Thailand|Bangkok|(^|[^A-Za-z])TH([^A-Za-z]|$))/i },
+    { label: "🇻🇳 越南",   re: /(🇻🇳|(^|[^A-Za-z])SGN([^A-Za-z]|$)|(^|[^A-Za-z])HAN([^A-Za-z]|$)|越南|胡志明|河内|河內|Vietnam|Hanoi|(^|[^A-Za-z])VN([^A-Za-z]|$))/i },
+    { label: "🇮🇩 印尼",   re: /(🇮🇩|(^|[^A-Za-z])CGK([^A-Za-z]|$)|印尼|印度尼西亚|雅加达|Indonesia|Jakarta|(^|[^A-Za-z])ID([^A-Za-z]|$))/i },
+    { label: "🇵🇭 菲律宾", re: /(🇵🇭|(^|[^A-Za-z])MNL([^A-Za-z]|$)|菲律宾|菲律賓|马尼拉|Philippines|Manila|(^|[^A-Za-z])PH([^A-Za-z]|$))/i },
+    { label: "🇮🇳 印度",   re: /(🇮🇳|(^|[^A-Za-z])DEL([^A-Za-z]|$)|(^|[^A-Za-z])BOM([^A-Za-z]|$)|印度|孟买|孟買|德里|India|Delhi|Mumbai|(^|[^A-Za-z])IN([^A-Za-z]|$))/i },
+    { label: "🇦🇺 澳大利亚", re: /(🇦🇺|(^|[^A-Za-z])SYD([^A-Za-z]|$)|(^|[^A-Za-z])MEL([^A-Za-z]|$)|(^|[^A-Za-z])BNE([^A-Za-z]|$)|澳大利亚|澳洲|悉尼|墨尔本|墨爾本|Australia|Sydney|Melbourne|(^|[^A-Za-z])AU([^A-Za-z]|$))/i },
+    { label: "🇺🇸 美国",   re: /(🇺🇸|(^|[^A-Za-z])LAX([^A-Za-z]|$)|(^|[^A-Za-z])SFO([^A-Za-z]|$)|(^|[^A-Za-z])SJC([^A-Za-z]|$)|(^|[^A-Za-z])SEA([^A-Za-z]|$)|(^|[^A-Za-z])ORD([^A-Za-z]|$)|(^|[^A-Za-z])DFW([^A-Za-z]|$)|(^|[^A-Za-z])JFK([^A-Za-z]|$)|(^|[^A-Za-z])EWR([^A-Za-z]|$)|(^|[^A-Za-z])IAD([^A-Za-z]|$)|(^|[^A-Za-z])MIA([^A-Za-z]|$)|(^|[^A-Za-z])ATL([^A-Za-z]|$)|美国|美國|旧金山|舊金山|洛杉矶|洛杉磯|纽约|紐約|硅谷|矽谷|圣何塞|聖何塞|西雅图|芝加哥|达拉斯|達拉斯|迈阿密|United\s?States|America|Francisco|Miami|Atlanta|Washington|Los\s?Angeles|New\s?York|San\s?Jose|San\s?Francisco|Seattle|Chicago|Dallas|(^|[^A-Za-z])US([^A-Za-z]|$))/i },
+    { label: "🇨🇦 加拿大", re: /(🇨🇦|(^|[^A-Za-z])YYZ([^A-Za-z]|$)|(^|[^A-Za-z])YVR([^A-Za-z]|$)|加拿大|多伦多|多倫多|温哥华|溫哥華|Canada|Toronto|Vancouver|(^|[^A-Za-z])CA([^A-Za-z]|$))/i },
+    { label: "🇬🇧 英国",   re: /(🇬🇧|(^|[^A-Za-z])LHR([^A-Za-z]|$)|英国|英國|伦敦|倫敦|London|United\s?Kingdom|Britain|(^|[^A-Za-z])UK([^A-Za-z]|$)|(^|[^A-Za-z])GB([^A-Za-z]|$))/i },
+    { label: "🇩🇪 德国",   re: /(🇩🇪|(^|[^A-Za-z])FRA([^A-Za-z]|$)|(^|[^A-Za-z])MUC([^A-Za-z]|$)|德国|德國|法兰克福|法蘭克福|慕尼黑|Germany|Frankfurt|(^|[^A-Za-z])DE([^A-Za-z]|$))/i },
+    { label: "🇫🇷 法国",   re: /(🇫🇷|(^|[^A-Za-z])CDG([^A-Za-z]|$)|(^|[^A-Za-z])ORY([^A-Za-z]|$)|法国|法國|巴黎|France|Paris|(^|[^A-Za-z])FR([^A-Za-z]|$))/i },
+    { label: "🇳🇱 荷兰",   re: /(🇳🇱|(^|[^A-Za-z])AMS([^A-Za-z]|$)|荷兰|荷蘭|阿姆斯特丹|Netherlands|Amsterdam|(^|[^A-Za-z])NL([^A-Za-z]|$))/i },
+    { label: "🇷🇺 俄罗斯", re: /(🇷🇺|(^|[^A-Za-z])SVO([^A-Za-z]|$)|俄罗斯|俄羅斯|莫斯科|Russia|Moscow|(^|[^A-Za-z])RU([^A-Za-z]|$))/i },
+    { label: "🇹🇷 土耳其", re: /(🇹🇷|(^|[^A-Za-z])IST([^A-Za-z]|$)|土耳其|伊斯坦布尔|Turkey|Istanbul|(^|[^A-Za-z])TR([^A-Za-z]|$))/i },
+    { label: "🇧🇷 巴西",   re: /(🇧🇷|(^|[^A-Za-z])GRU([^A-Za-z]|$)|巴西|圣保罗|聖保羅|Brazil|Sao\s?Paulo|(^|[^A-Za-z])BR([^A-Za-z]|$))/i }
   ];
 
   var assigned = {};
